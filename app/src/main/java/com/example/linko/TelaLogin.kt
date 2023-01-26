@@ -128,7 +128,7 @@ fun TelaLogin(navController: NavController) {
                                 navController.navigate(ItemNavegacao.Cards.route)
                             } else {
                                 Log.w(ContentValues.TAG, "signInWithEmail:failure", task.exception)
-                                Toast.makeText(context, "criação de usuário falhou", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, "Algo deu errado!", Toast.LENGTH_LONG).show()
                             }
                         }
                 }

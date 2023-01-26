@@ -18,39 +18,13 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.linko.ui.theme.LinkoTheme
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.ktx.database
-import com.google.firebase.database.ktx.getValue
 import com.google.firebase.ktx.Firebase
-
-data class Title(
-    val assunto: String = ""
-)
-
-class TitleViewModel: ViewModel(){
-    private val database = Firebase.database.reference
-    private val user = Firebase.auth.currentUser
-    private val uid = user?.uid
-
-    private var _dados = mutableStateOf<List<Title>>(emptyList())
-    val titles: State<List<Title>> = _dados
-
-    private fun getDado(){
-        database.child("usuario").child(uid.toString()).child("assunto").child("0").get()
-            .addOnCompleteListener() { task ->
-                if(task.isSuccessful) {
-                    _dados.value = task.result.getValue<List<Title>>() as List<Title>
-                } else {
-                    Log.w(TAG, task.exception?.localizedMessage.toString())
-                }
-            }
-        }
-}
 
 //https://medium.com/@daniel.atitienei/how-to-read-data-from-firebase-realtime-database-and-display-it-using-jetpack-compose-fdc0316009ea
 
@@ -70,7 +44,31 @@ fun TelaCards(navController: NavController) {
                 )
         },
         content = {
-            Text(text = "Flashcards")
+            Button(
+                onClick = {
+                    val db = Firebase.database.reference
+                    val user = Firebase.auth.currentUser
+                    val uid = user?.uid
+
+                    db.child(uid.toString()).child("titulosCards").get()
+                        .addOnSuccessListener {
+                            Log.i("firebase","Dados pegos ${it.value}")
+                            val lista = it.value.toString().replace(", ","=")
+                            val novaLista = lista.split("=")
+                            //val tipo = lista::class.simpleName
+                            Log.i("tipoDADO", "Array é $lista")
+
+                            for(i in 1.. novaLista.size step 2){
+                                val item = novaLista[i]
+                                Log.i("Vetor", "$item")
+                            }
+                        }.addOnFailureListener{
+                            Log.e("firebase", "Erro Ao tentar recuperar dados", it)
+                        }
+                }
+            ) {
+                Text(text = "Verificar Dados")
+            }
         },
         bottomBar = {
             BottomNavigation(backgroundColor = MaterialTheme.colors.background){
@@ -126,7 +124,7 @@ fun TelaAdicionarCartao(navController: NavController) {
                             val user = Firebase.auth.currentUser
                             val uid = user?.uid
 
-                            database.child("usuario").child(uid.toString()).child("assunto").child("0").setValue(titulo)
+                            database.child(uid.toString()).child("titulosCards").push().setValue(titulo)
                                 .addOnCompleteListener() { task ->
                                     if(task.isSuccessful) {
                                         Toast.makeText(context, "Sucesso!", Toast.LENGTH_SHORT).show()
